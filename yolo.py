@@ -18,7 +18,7 @@ from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
 from yolo3.utils import letterbox_image
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-from keras.utils import multi_gpu_model
+#from keras.utils import multi_gpu_model
 gpu_num=1
 
 class YOLO(object):
@@ -31,7 +31,7 @@ class YOLO(object):
         self.class_names = self._get_class()
         self.anchors = self._get_anchors()
         self.sess = K.get_session()
-        self.model_image_size = (416, 416) # fixed size or (None, None), hw
+        self.model_image_size = (1024, 1024) # fixed size or (None, None), hw
         self.boxes, self.scores, self.classes = self.generate()
 
     def _get_class(self):
@@ -82,8 +82,6 @@ class YOLO(object):
 
         # Generate output tensor targets for filtered bounding boxes.
         self.input_image_shape = K.placeholder(shape=(2, ))
-        if gpu_num>=2:
-            self.yolo_model = multi_gpu_model(self.yolo_model, gpus=gpu_num)
         boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
                 len(self.class_names), self.input_image_shape,
                 score_threshold=self.score, iou_threshold=self.iou)
@@ -93,12 +91,14 @@ class YOLO(object):
         start = timer()
 
         if self.model_image_size != (None, None):
+            print self.model_image_size
             assert self.model_image_size[0]%32 == 0, 'Multiples of 32 required'
             assert self.model_image_size[1]%32 == 0, 'Multiples of 32 required'
             boxed_image = letterbox_image(image, tuple(reversed(self.model_image_size)))
         else:
             new_image_size = (image.width - (image.width % 32),
                               image.height - (image.height % 32))
+            print new_image_size,image
             boxed_image = letterbox_image(image, new_image_size)
         image_data = np.array(boxed_image, dtype='float32')
 
@@ -205,6 +205,7 @@ def detect_video(yolo, video_path, output_path=""):
 def detect_img(yolo):
     while True:
         img = input('Input image filename:')
+        print img
         try:
             image = Image.open(img)
         except:

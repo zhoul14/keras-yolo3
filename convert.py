@@ -6,7 +6,7 @@ Reads Darknet config and weights and creates Keras model with TF backend.
 
 import argparse
 import configparser
-import io
+from io import BytesIO as StringIO
 import os
 from collections import defaultdict
 
@@ -35,14 +35,16 @@ parser.add_argument(
     '--weights_only',
     help='Save as Keras weights file instead of model file.',
     action='store_true')
+print parser
 
 def unique_config_sections(config_file):
     """Convert all config sections to have unique names.
 
     Adds unique suffixes to config sections for compability with configparser.
     """
+    print config_file
     section_counters = defaultdict(int)
-    output_stream = io.StringIO()
+    output_stream = StringIO()
     with open(config_file) as fin:
         for line in fin:
             if line.startswith('['):
